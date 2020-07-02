@@ -1,9 +1,8 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import logo from "./logo.svg";
 import "./App.css";
 import { Provider } from "react-redux";
 import * as SWRTC from "@andyet/simplewebrtc";
+import "./ML.js";
 
 const API_KEY = "32b9eb02645b11cb48d53829";
 // ====================================================================
@@ -35,13 +34,9 @@ function App() {
               const remoteVideo = remoteMedia.find(
                 (media) => media.kind === "video"
               );
-              const localVideo = localMedia.find(
-                (media) => media.kind === "video"
-              );
               return (
                 <div>
                   <SWRTC.Video media={remoteVideo} />
-                  <SWRTC.Video media={localVideo} />
                 </div>
               );
             }}
