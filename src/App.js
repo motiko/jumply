@@ -1,25 +1,54 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import ReactDOM from "react-dom";
+import logo from "./logo.svg";
+import "./App.css";
+import { Provider } from "react-redux";
+import * as SWRTC from "@andyet/simplewebrtc";
 
+const API_KEY = "32b9eb02645b11cb48d53829";
+// ====================================================================
+
+const ROOM_NAME = "jumply";
+// const ROOM_PASSWORD = "YOUR_ROOM_PASSWORD";
+const CONFIG_URL = `https://api.simplewebrtc.com/config/guest/${API_KEY}`;
+
+const store = SWRTC.createStore();
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Provider store={store}>
+      <SWRTC.Provider configUrl={CONFIG_URL}>
+        {/* Render based on the connection state */}
+        <SWRTC.Connecting>
+          <h1>Connecting...</h1>
+        </SWRTC.Connecting>
+
+        <SWRTC.Connected>
+          <h1>Connected!</h1>
+          {/* Request the user's media */}
+          <SWRTC.RequestUserMedia video auto />
+
+          {/* Connect to a room with a name and optional password */}
+          <SWRTC.Room name={ROOM_NAME}>
+            {({ joined, localMedia, remoteMedia }) => {
+              /* Use the rest of the SWRTC React Components to render your UI */
+              // console.log(props);
+              const remoteVideo = remoteMedia.find(
+                (media) => media.kind === "video"
+              );
+              const localVideo = localMedia.find(
+                (media) => media.kind === "video"
+              );
+              return (
+                <div>
+                  <SWRTC.Video media={remoteVideo} />
+                  <SWRTC.Video media={localVideo} />
+                </div>
+              );
+            }}
+          </SWRTC.Room>
+        </SWRTC.Connected>
+      </SWRTC.Provider>
+    </Provider>
   );
 }
 
