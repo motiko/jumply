@@ -10,10 +10,11 @@ function setupMl() {
   ctx.strokeStyle = "green";
   ctx.font = "60px Verdana";
   let counter = 0;
-  let brain;
+  let judge;
+  let counterSound = new sound("sounds/beep.mp3");
 
   let pose, skeleton;
-  let poseLabel = "QWE";
+  let poseLabel = "READY";
 
   let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
 
@@ -32,7 +33,7 @@ function setupMl() {
     // We can call both functions to draw all keypoints and the skeletons
     drawKeypoints();
     drawSkeleton();
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "pink";
     ctx.fillText(poseLabel, 10, 90);
     ctx.fillText(counter, 400, 90);
     window.requestAnimationFrame(drawCameraIntoCanvas);
@@ -58,7 +59,7 @@ function setupMl() {
   function modelReady() {
     console.log("model ready");
     drawCameraIntoCanvas();
-    brain = ml5.neuralNetwork({
+    judge = ml5.neuralNetwork({
       inputs: 8,
       outputs: 2,
       task: "classification",
@@ -69,10 +70,10 @@ function setupMl() {
       metadata: "models/jumping_jacks/model_meta.json",
       weights: "models/jumping_jacks/model.weights.bin",
     };
-    brain.load(modelInfo, brainLoaded);
+    judge.load(modelInfo, judgeReady);
   }
 
-  function brainLoaded() {
+  function judgeReady() {
     console.log("pose classification ready!");
     classifyPose();
   }
@@ -86,21 +87,20 @@ function setupMl() {
         ...inputs.map((obj) => [obj.position.x, obj.position.x]),
       ].flat();
       console.log(inputs);
-      brain.classify(inputs, gotResult);
+      judge.classify(inputs, poseClassified);
     } else {
       setTimeout(classifyPose, 100);
     }
   }
 
-  function gotResult(error, results) {
+  function poseClassified(error, results) {
     if (results && results[0].confidence > 0.75) {
       const newPoseLabel = results[0].label.toUpperCase();
       if (newPoseLabel !== poseLabel) {
         poseLabel = newPoseLabel;
-        console.log(poseLabel);
         if (poseLabel === "Q") {
           counter++;
-          console.log(counter);
+          counterSound.play();
           document.getElementById("counter").innerText = counter;
           // jump();
         }
@@ -132,4 +132,19 @@ function setupMl() {
       }
     }
   }
+}
+
+function sound(src) {
+  this.sound = document.createElement("audio");
+  this.sound.src = src;
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  document.body.appendChild(this.sound);
+  this.play = function () {
+    this.sound.play();
+  };
+  this.stop = function () {
+    this.sound.pause();
+  };
 }
