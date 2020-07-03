@@ -80,7 +80,7 @@ function setupMl() {
 
   function classifyPose() {
     if (!pose) return;
-    if (parts.every((partName) => pose[partName].confidence > 0.5)) {
+    if (parts.every((partName) => pose[partName].confidence > 0.8)) {
       let inputs = pose.keypoints.filter((kp) => parts.includes(kp.part));
 
       inputs = [
@@ -94,7 +94,7 @@ function setupMl() {
   }
 
   function poseClassified(error, results) {
-    if (results && results[0].confidence > 0.75) {
+    if (results && results[0].confidence > 0.95) {
       const newPoseLabel = results[0].label.toUpperCase();
       if (newPoseLabel !== poseLabel) {
         poseLabel = newPoseLabel;
