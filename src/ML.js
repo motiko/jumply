@@ -1,9 +1,12 @@
 import ml5 from "ml5";
+import { Actions } from "@andyet/simplewebrtc";
+
+const ROOM_NAME = "jumply";
 
 document.addEventListener("DOMContentLoaded", setupMl);
 
 function setupMl() {
-  var video = document.getElementById("video");
+  var video = document.getElementById("videocap");
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   ctx.lineWidth = 10;
@@ -12,20 +15,22 @@ function setupMl() {
   let counter = 0;
   let judge;
   let counterSound = new sound("sounds/beep.mp3");
+  let button = document.getElementById("call");
+  button.addEventListener("click", () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(function (stream) {
+          video.srcObject = stream;
+          video.play();
+        });
+    }
+  });
 
   let pose, skeleton;
   let poseLabel = "READY";
 
   let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
-
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then(function (stream) {
-        video.srcObject = stream;
-        video.play();
-      });
-  }
 
   function drawCameraIntoCanvas() {
     // Draw the video element into the canvas
@@ -86,7 +91,6 @@ function setupMl() {
       inputs = [
         ...inputs.map((obj) => [obj.position.x, obj.position.x]),
       ].flat();
-      console.log(inputs);
       judge.classify(inputs, poseClassified);
     } else {
       setTimeout(classifyPose, 100);
@@ -101,6 +105,7 @@ function setupMl() {
         if (poseLabel === "Q") {
           counter++;
           counterSound.play();
+          Actions.sendChat(ROOM_NAME, { body: counter });
           document.getElementById("counter").innerText = counter;
           // jump();
         }

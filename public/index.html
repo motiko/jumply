@@ -28,16 +28,17 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <button id="call">Call</button>
     <div id="root"></div>
     <video
-      id="video"
+      id="videocap"
       width="640"
       height="480"
-      autoplay
-      style="display: none;"
+      muted
+      playsinline
+      style="position: fixed; z-index: 8000000000; left: 0; top: 0; width: 1px; height: 1px; opacity: 0.00000001; pointer-events: none"
     ></video>
     <canvas id="canvas" width="640" height="480"></canvas>
-    <div id="counter">100</div>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
