@@ -8,16 +8,25 @@ function setupMl() {
   var video = document.getElementById("videocap");
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
+  let secondsLeft = 20;
   ctx.lineWidth = 10;
   ctx.strokeStyle = "green";
-  ctx.font = "60px Verdana";
+  ctx.font = "90px Verdana";
   let counter = 0;
   let judge;
-  let counterSound = new sound("sounds/beep.mp3");
-  let startSound = new sound("sounds/123.mpeg");
-  let audioJungle = new sound("sounds/audio_jungle.mpeg");
+  let startSound, eser, audioJungle, tenSeconds, youLost, youWin, counterSound;
+
   let button = document.getElementById("call");
+  let counterInterval;
+  let initialShoulder;
   button.addEventListener("click", () => {
+    startSound = new sound("sounds/123.mpeg");
+    counterSound = new sound("sounds/counter.mp3");
+    tenSeconds = new sound("sounds/10sec.mp3");
+    youLost = new sound("sounds/you_lost.mp3");
+    youWin = new sound("sounds/clap.mp3");
+    eser = new sound("sounds/eser.ogg");
+    audioJungle = new sound("sounds/audio_jungle.mpeg");
     let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
     audioJungle.play();
     console.log(roomAddress);
@@ -39,15 +48,23 @@ function setupMl() {
 
   let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
 
+  let yogevParts = ["rightShoulder", "leftShoulder", "leftElbow", "rightElbow"];
+  let yogevPosition = "READY";
+  let yogevDelta = 30;
+  let yogevCounter = -1;
+
   function drawCameraIntoCanvas() {
     // Draw the video element into the canvas
     ctx.drawImage(video, 0, 0, 640, 480);
     // We can call both functions to draw all keypoints and the skeletons
     drawKeypoints();
     drawSkeleton();
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "pink";
     ctx.fillText(poseLabel, 10, 90);
     ctx.fillText(counter, 400, 90);
+    ctx.fillText(yogevCounter, 400, 140);
+    ctx.fillText(secondsLeft, 90, 440);
+    ctx.fillText(yogevPosition, 90, 140);
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
   const poseNet = ml5.poseNet(
@@ -55,7 +72,7 @@ function setupMl() {
     {
       architecture: "MobileNetV1",
       detectionType: "single",
-      minConfidence: 0.7,
+      minConfidence: 0.8,
     },
     modelReady
   );
@@ -69,7 +86,6 @@ function setupMl() {
   }
 
   function modelReady() {
-    console.log("model ready");
     drawCameraIntoCanvas();
     judge = ml5.neuralNetwork({
       inputs: 8,
@@ -86,13 +102,18 @@ function setupMl() {
   }
 
   function judgeReady() {
-    console.log("pose classification ready!");
     classifyPose();
   }
 
   function classifyPose() {
     if (!pose) return;
-    if (parts.every((partName) => pose[partName].confidence > 0.75)) {
+    if (parts.every((partName) => pose[partName].confidence > 0.8)) {
+      console.log(pose.rightShoulder);
+      if (pose.rightShoulder.x > initialShoulder + yogevDelta) {
+        yogevPosition = "W";
+        yogevCounter++;
+        console.log("yogev:W");
+      }
       let inputs = pose.keypoints.filter((kp) => parts.includes(kp.part));
 
       inputs = [
@@ -105,17 +126,37 @@ function setupMl() {
   }
 
   function poseClassified(error, results) {
-    if (results && results[0].confidence > 0.9) {
+    if (results && results[0].confidence > 0.8) {
       const newPoseLabel = results[0].label.toUpperCase();
       if (newPoseLabel !== poseLabel) {
         poseLabel = newPoseLabel;
         if (poseLabel === "Q") {
           counter++;
-          if (counter == 1) {
+          if (counter === 1) {
+            counterInterval = setInterval(() => {
+              secondsLeft--;
+              if (secondsLeft === 10) tenSeconds.play();
+              if (secondsLeft === 0) {
+                clearInterval(counterInterval);
+                audioJungle.stop();
+                if (counter > 15) {
+                  youWin.play();
+                } else {
+                  youLost.play();
+                }
+              }
+            }, 1000);
+            audioJungle.setVolume(0.2);
             startSound.play();
+            initialShoulder = pose.rightShoulder.x;
+            console.log("initialShoulder");
+            console.log(initialShoulder);
+          }
+          if (counter === 10) {
+            eser.play();
           }
           counterSound.play();
-          Actions.sendChat(ROOM_NAME, { body: counter });
+          // Actions.sendChat(ROOM_NAME, { body: counter });
           document.getElementById("counter").innerText = counter;
           // jump();
         }
@@ -150,16 +191,21 @@ function setupMl() {
 }
 
 function sound(src) {
-  this.sound = document.createElement("audio");
-  this.sound.src = src;
-  this.sound.setAttribute("preload", "auto");
-  this.sound.setAttribute("controls", "none");
-  this.sound.style.display = "none";
-  document.body.appendChild(this.sound);
-  this.play = function () {
-    this.sound.play();
-  };
-  this.stop = function () {
-    this.sound.pause();
-  };
+  try {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function () {
+      this.sound.play();
+    };
+    this.stop = function () {
+      this.sound.pause();
+    };
+    this.setVolume = function (vol) {
+      this.sound.volume = vol;
+    };
+  } catch (e) {}
 }

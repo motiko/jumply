@@ -17,13 +17,8 @@ function App() {
   return (
     <Provider store={store}>
       <SWRTC.Provider configUrl={CONFIG_URL}>
-        {/* Render based on the connection state */}
-        <SWRTC.Connecting>
-          <h1>Connecting...</h1>
-        </SWRTC.Connecting>
 
         <SWRTC.Connected>
-          <h1>Connected!</h1>
           {/* Request the user's media */}
           <SWRTC.RequestUserMedia video auto />
 
@@ -35,10 +30,7 @@ function App() {
               const remoteVideo = remoteMedia.find(
                 (media) => media.kind === "video"
               );
-              return (
-                <div>
-                </div>
-              );
+              return <div></div>;
             }}
           </SWRTC.Room>
         </SWRTC.Connected>
