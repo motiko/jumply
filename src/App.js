@@ -12,7 +12,7 @@ const ROOM_NAME = "jumply";
 const CONFIG_URL = `https://api.simplewebrtc.com/config/guest/${API_KEY}`;
 
 const store = SWRTC.createStore();
-window.store = store
+window.store = store;
 function App() {
   return (
     <Provider store={store}>
@@ -33,11 +33,10 @@ function App() {
               /* Use the rest of the SWRTC React Components to render your UI */
               // console.log(props);
               const remoteVideo = remoteMedia.find(
-                media => media.kind === "video"
+                (media) => media.kind === "video"
               );
               return (
                 <div>
-                  <SWRTC.Video media={remoteVideo} />
                 </div>
               );
             }}

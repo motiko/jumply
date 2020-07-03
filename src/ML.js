@@ -1,6 +1,5 @@
 import ml5 from "ml5";
 import { Actions } from "@andyet/simplewebrtc";
-
 const ROOM_NAME = "jumply";
 
 document.addEventListener("DOMContentLoaded", setupMl);
@@ -15,8 +14,16 @@ function setupMl() {
   let counter = 0;
   let judge;
   let counterSound = new sound("sounds/beep.mp3");
+  let startSound = new sound("sounds/123.mpeg");
+  let audioJungle = new sound("sounds/audio_jungle.mpeg");
   let button = document.getElementById("call");
   button.addEventListener("click", () => {
+    let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
+    audioJungle.play();
+    console.log(roomAddress);
+    if (roomAddress) roomAddress = roomAddress[0];
+    console.log(roomAddress);
+    Actions.sendChat(roomAddress, { body: "qwe", displayName: "anon" });
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
         .getUserMedia({ video: true })
@@ -38,7 +45,7 @@ function setupMl() {
     // We can call both functions to draw all keypoints and the skeletons
     drawKeypoints();
     drawSkeleton();
-    ctx.fillStyle = "pink";
+    ctx.fillStyle = "red";
     ctx.fillText(poseLabel, 10, 90);
     ctx.fillText(counter, 400, 90);
     window.requestAnimationFrame(drawCameraIntoCanvas);
@@ -48,7 +55,7 @@ function setupMl() {
     {
       architecture: "MobileNetV1",
       detectionType: "single",
-      minConfidence: 0.8,
+      minConfidence: 0.7,
     },
     modelReady
   );
@@ -85,7 +92,7 @@ function setupMl() {
 
   function classifyPose() {
     if (!pose) return;
-    if (parts.every((partName) => pose[partName].confidence > 0.8)) {
+    if (parts.every((partName) => pose[partName].confidence > 0.75)) {
       let inputs = pose.keypoints.filter((kp) => parts.includes(kp.part));
 
       inputs = [
@@ -98,12 +105,15 @@ function setupMl() {
   }
 
   function poseClassified(error, results) {
-    if (results && results[0].confidence > 0.95) {
+    if (results && results[0].confidence > 0.9) {
       const newPoseLabel = results[0].label.toUpperCase();
       if (newPoseLabel !== poseLabel) {
         poseLabel = newPoseLabel;
         if (poseLabel === "Q") {
           counter++;
+          if (counter == 1) {
+            startSound.play();
+          }
           counterSound.play();
           Actions.sendChat(ROOM_NAME, { body: counter });
           document.getElementById("counter").innerText = counter;
