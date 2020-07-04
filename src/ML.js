@@ -20,13 +20,15 @@ function setupMl() {
   let counterInterval;
   let initialShoulder;
   button.addEventListener("click", () => {
-    startSound = new sound("sounds/123.mpeg");
-    counterSound = new sound("sounds/counter.mp3");
-    tenSeconds = new sound("sounds/10sec.mp3");
-    youLost = new sound("sounds/you_lost.mp3");
-    youWin = new sound("sounds/clap.mp3");
-    eser = new sound("sounds/eser.ogg");
-    audioJungle = new sound("sounds/audio_jungle.mpeg");
+    startSound = new sound(process.env.PUBLIC_URL + "sounds/123.mpeg");
+    counterSound = new sound(process.env.PUBLIC_URL + "sounds/counter.mp3");
+    tenSeconds = new sound(process.env.PUBLIC_URL + "sounds/10sec.mp3");
+    youLost = new sound(process.env.PUBLIC_URL + "sounds/you_lost.mp3");
+    youWin = new sound(process.env.PUBLIC_URL + "sounds/clap.mp3");
+    eser = new sound(process.env.PUBLIC_URL + "sounds/eser.ogg");
+    audioJungle = new sound(
+      process.env.PUBLIC_URL + "sounds/audio_jungle.mpeg"
+    );
     let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
     audioJungle.play();
     console.log(roomAddress);
@@ -60,11 +62,15 @@ function setupMl() {
     drawKeypoints();
     drawSkeleton();
     ctx.fillStyle = "pink";
-    ctx.fillText(poseLabel, 10, 90);
+    if (poseLabel === "READY") {
+      ctx.fillText(poseLabel, 10, 90);
+    } else {
+      ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
+    }
     ctx.fillText(counter, 400, 90);
-    ctx.fillText(yogevCounter, 400, 140);
+    // ctx.fillText(yogevCounter, 400, 140);
     ctx.fillText(secondsLeft, 90, 440);
-    ctx.fillText(yogevPosition, 90, 140);
+    // ctx.fillText(yogevPosition, 90, 140);
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
   const poseNet = ml5.poseNet(
@@ -190,10 +196,11 @@ function setupMl() {
   }
 }
 
-function sound(src) {
+function sound(src, volume = 0.6) {
   try {
     this.sound = document.createElement("audio");
     this.sound.src = src;
+    this.sound.volume = volume;
     this.sound.setAttribute("preload", "auto");
     this.sound.setAttribute("controls", "none");
     this.sound.style.display = "none";
