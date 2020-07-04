@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import ml5 from "ml5";
 
 var container, stats, controls;
 var camera, scene, renderer, light, mixer;
@@ -71,8 +70,8 @@ function init() {
 
     jumpingAction = mixer.clipAction(object.animations[0]);
     jumpingAction.clampWhenFinished = true;
-    jumpingAction.setLoop(THREE.LoopPingPong, 4);
-    jumpingAction.play();
+    // jumpingAction.setLoop(THREE.LoopPingPong, 4);
+    // jumpingAction.play();
 
     object.traverse(function (child) {
       if (child.isMesh) {
@@ -98,7 +97,7 @@ function init() {
 
   // stats
   stats = new Stats();
-  container.appendChild(stats.dom);
+  // container.appendChild(stats.dom);
 }
 
 function onWindowResize() {

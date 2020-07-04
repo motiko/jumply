@@ -11,6 +11,7 @@ video {
   width: 100vw;
   height: 100vh;
   font-size: 80px;
+  z-index: 99999;
 }
 
 #container {

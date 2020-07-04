@@ -1,5 +1,7 @@
 import ml5 from "ml5";
 import { Actions } from "@andyet/simplewebrtc";
+import { jump } from "./virtual";
+
 const ROOM_NAME = "jumply";
 
 document.addEventListener("DOMContentLoaded", setupMl);
@@ -33,9 +35,7 @@ function setupMl() {
     audioJungle.setVolume(0.1);
     audioJungle.play();
     let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
-    console.log(roomAddress);
     if (roomAddress) roomAddress = roomAddress[0];
-    console.log(roomAddress);
     Actions.sendChat(roomAddress, { body: "qwe", displayName: "anon" });
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
@@ -114,12 +114,13 @@ function setupMl() {
 
   function judgeReady() {
     classifyPose();
+    jump();
   }
 
   function classifyPose() {
     if (!pose) return;
     if (parts.every((partName) => pose[partName].confidence > 0.8)) {
-      console.log(pose.rightShoulder);
+      // console.log(pose.rightShoulder);
       if (pose.rightShoulder.x > initialShoulder + yogevDelta) {
         yogevPosition = "W";
         yogevCounter++;
@@ -143,6 +144,7 @@ function setupMl() {
         poseLabel = newPoseLabel;
         if (poseLabel === "Q") {
           counter++;
+          jump();
           if (counter === 1) {
             counterInterval = setInterval(() => {
               secondsLeft--;
@@ -168,9 +170,6 @@ function setupMl() {
             eser.play();
           }
           counterSound.play();
-          // Actions.sendChat(ROOM_NAME, { body: counter });
-          document.getElementById("counter").innerText = counter;
-          // jump();
         }
       }
     }
@@ -202,23 +201,25 @@ function setupMl() {
   }
 }
 
-function sound(src, volume = 0.6) {
-  try {
-    this.sound = document.createElement("audio");
-    this.sound.src = src;
-    this.sound.volume = volume;
-    this.sound.setAttribute("preload", "auto");
-    this.sound.setAttribute("controls", "none");
-    this.sound.style.display = "none";
-    document.body.appendChild(this.sound);
-    this.play = function () {
-      this.sound.play();
-    };
-    this.stop = function () {
-      this.sound.pause();
-    };
-    this.setVolume = function (vol) {
-      this.sound.volume = vol;
-    };
-  } catch (e) {}
+class sound {
+  constructor(src, volume = 0.6) {
+    try {
+      this.sound = document.createElement("audio");
+      this.sound.src = src;
+      this.sound.volume = volume;
+      this.sound.setAttribute("preload", "auto");
+      this.sound.setAttribute("controls", "none");
+      this.sound.style.display = "none";
+      document.body.appendChild(this.sound);
+      this.play = function () {
+        this.sound.play();
+      };
+      this.stop = function () {
+        this.sound.pause();
+      };
+      this.setVolume = function (vol) {
+        this.sound.volume = vol;
+      };
+    } catch (e) {}
+  }
 }
