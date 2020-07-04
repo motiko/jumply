@@ -30,7 +30,7 @@ function setupMl() {
     youWin = new sound(process.env.PUBLIC_URL + "sounds/clap.mp3");
     eser = new sound(process.env.PUBLIC_URL + "sounds/eser.ogg");
     audioJungle = new sound(
-      process.env.PUBLIC_URL + "sounds/audio_jungle.mpeg"
+      process.env.PUBLIC_URL + "sounds/sport_countdown.mp3"
     );
     audioJungle.setVolume(0.1);
     audioJungle.play();
@@ -63,18 +63,20 @@ function setupMl() {
     // Draw the video element into the canvas
     ctx.drawImage(video, 0, 0, 800, 600);
     // We can call both functions to draw all keypoints and the skeletons
-    drawKeypoints();
+    // drawKeypoints();
     drawSkeleton();
     ctx.fillStyle = "pink";
     if (poseLabel === "READY") {
-      ctx.fillText(poseLabel, 10, 90);
+      ctx.fillText("Get ready", 10, 90);
+      ctx.globalAlpha = 0.4;
       ctx.drawImage(silImg, 180, 60);
+      ctx.globalAlpha = 1;
     } else {
       ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
     }
-    ctx.fillText(counter, 400, 90);
+    ctx.fillText(counter, 660, 90);
     // ctx.fillText(yogevCounter, 400, 140);
-    ctx.fillText(secondsLeft, 90, 440);
+    ctx.fillText(secondsLeft, 360, 550);
     // ctx.fillText(yogevPosition, 90, 140);
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
