@@ -21,3 +21,10 @@ video {
   background-color: gray;
 }
 
+#virtual {
+  position: fixed;
+  right: 0px;
+  bottom: 0px;
+  width: 25vw;
+  height: 50vh;
+}
