@@ -30,7 +30,11 @@ function App() {
               const remoteVideo = remoteMedia.find(
                 (media) => media.kind === "video"
               );
-              return <div></div>;
+              return (
+                <div>
+                  <SWRTC.Video media={remoteVideo} />
+                </div>
+              );
             }}
           </SWRTC.Room>
         </SWRTC.Connected>

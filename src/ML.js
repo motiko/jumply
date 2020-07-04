@@ -16,10 +16,11 @@ function setupMl() {
   let judge;
   let startSound, eser, audioJungle, tenSeconds, youLost, youWin, counterSound;
 
-  let button = document.getElementById("call");
+  let button = document.getElementById("play");
   let counterInterval;
   let initialShoulder;
   button.addEventListener("click", () => {
+    button.style.display = "none";
     startSound = new sound(process.env.PUBLIC_URL + "sounds/123.mpeg");
     counterSound = new sound(process.env.PUBLIC_URL + "sounds/counter.mp3");
     tenSeconds = new sound(process.env.PUBLIC_URL + "sounds/10sec.mp3");
@@ -29,8 +30,9 @@ function setupMl() {
     audioJungle = new sound(
       process.env.PUBLIC_URL + "sounds/audio_jungle.mpeg"
     );
-    let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
+    audioJungle.setVolume(0.1);
     audioJungle.play();
+    let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
     console.log(roomAddress);
     if (roomAddress) roomAddress = roomAddress[0];
     console.log(roomAddress);
@@ -55,15 +57,18 @@ function setupMl() {
   let yogevDelta = 30;
   let yogevCounter = -1;
 
+  let silImg = document.getElementById("silouethe");
+
   function drawCameraIntoCanvas() {
     // Draw the video element into the canvas
-    ctx.drawImage(video, 0, 0, 640, 480);
+    ctx.drawImage(video, 0, 0, 800, 600);
     // We can call both functions to draw all keypoints and the skeletons
     drawKeypoints();
     drawSkeleton();
     ctx.fillStyle = "pink";
     if (poseLabel === "READY") {
       ctx.fillText(poseLabel, 10, 90);
+      ctx.drawImage(silImg, 180, 60);
     } else {
       ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
     }
@@ -143,6 +148,7 @@ function setupMl() {
               secondsLeft--;
               if (secondsLeft === 10) tenSeconds.play();
               if (secondsLeft === 0) {
+                button.style.display = "block";
                 clearInterval(counterInterval);
                 audioJungle.stop();
                 if (counter > 15) {
@@ -152,7 +158,7 @@ function setupMl() {
                 }
               }
             }, 1000);
-            audioJungle.setVolume(0.2);
+            audioJungle.setVolume(0.4);
             startSound.play();
             initialShoulder = pose.rightShoulder.x;
             console.log("initialShoulder");
