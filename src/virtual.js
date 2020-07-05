@@ -122,7 +122,7 @@ function animate() {
 }
 
 export function jump(event) {
-  if (jumpingAction !== null) {
+  if (jumpingAction) {
     jumpingAction.setLoop(THREE.LoopPingPong, 2);
     jumpingAction.stop();
     jumpingAction.play();

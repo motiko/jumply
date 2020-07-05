@@ -1,6 +1,6 @@
 import ml5 from "ml5";
 import { Actions } from "@andyet/simplewebrtc";
-import { jump } from "./virtual";
+// import { jump } from "./virtual";
 
 const ROOM_NAME = "jumply";
 
@@ -87,7 +87,9 @@ function setupMl() {
     {
       architecture: "MobileNetV1",
       detectionType: "single",
-      minConfidence: 0.8,
+      minConfidence: 0.4,
+      multiplier: 1.0,
+      outputStride: 16,
     },
     modelReady
   );
@@ -98,11 +100,12 @@ function setupMl() {
       pose = poses[0].pose;
       skeleton = poses[0].skeleton;
     }
+    classifyPose();
   }
 
   function modelReady() {
     drawCameraIntoCanvas();
-    jump();
+    // jump();
     classifyPose();
   }
 
@@ -116,17 +119,17 @@ function setupMl() {
         poseLabel = "Q";
         countJump();
       } else if (poseLabel === "Q") {
-        if (pose.rightShoulder.y > initialShoulder + jumpDelta) {
+        if (pose.rightShoulder.y < initialShoulder - jumpDelta) {
           poseLabel = "W";
           countJump();
         }
       } else if (poseLabel === "W") {
-        if (pose.rightShoulder.y < initialShoulder + 50) {
+        if (pose.rightShoulder.y > initialShoulder - 50) {
           poseLabel = "Q";
         }
       }
     }
-    setTimeout(classifyPose, 100);
+    // setTimeout(classifyPose, 50);
   }
 
   function startSecondsCounter() {
@@ -149,7 +152,7 @@ function setupMl() {
   function countJump() {
     counter++;
     sendScore(counter);
-    jump();
+    // jump();
     if (counter === 1) {
       startSecondsCounter();
       audioJungle.setVolume(0.2);
@@ -186,7 +189,7 @@ function setupMl() {
     }
     if (initialShoulder) {
       drawLine(initialShoulder, "pink");
-      drawLine(initialShoulder + jumpDelta, "orange");
+      drawLine(initialShoulder - jumpDelta, "orange");
     }
   }
   function drawKeypoints() {

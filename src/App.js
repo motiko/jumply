@@ -3,7 +3,7 @@ import "./App.css";
 import { Provider } from "react-redux";
 import * as SWRTC from "@andyet/simplewebrtc";
 import "./ML.js";
-import "./virtual.js";
+// import "./virtual.js";
 
 const API_KEY = "32b9eb02645b11cb48d53829";
 // ====================================================================
