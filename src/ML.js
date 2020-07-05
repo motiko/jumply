@@ -3,6 +3,7 @@ import { Actions } from "@andyet/simplewebrtc";
 // import { jump } from "./virtual";
 
 const ROOM_NAME = "jumply";
+const userId = Math.floor(Math.random() * 100);
 
 document.addEventListener("DOMContentLoaded", setupMl);
 
@@ -12,7 +13,8 @@ function setupMl() {
   var ctx = canvas.getContext("2d");
   let secondsLeft = 20;
   ctx.font = "90px Verdana";
-  let counter = 0;
+  let myScore = 0;
+  let opponentScore = 0;
   let startSound, eser, audioJungle, tenSeconds, youLost, youWin, counterSound;
 
   let button = document.getElementById("play");
@@ -31,7 +33,8 @@ function setupMl() {
 
   function reset() {
     poseLabel = "READY";
-    counter = 0;
+    myScore = 0;
+    opponentScore = 0;
     secondsLeft = 20;
     initialShoulder = undefined;
   }
@@ -58,6 +61,7 @@ function setupMl() {
           video.play();
         });
     }
+    calcOpponentScore();
   });
 
   function drawCameraIntoCanvas() {
@@ -68,17 +72,17 @@ function setupMl() {
     drawSkeleton();
     ctx.fillStyle = "pink";
     if (poseLabel === "READY") {
-      ctx.fillText("Get ready", 10, 90);
+      ctx.fillText("Get into position", 10, 90);
       ctx.globalAlpha = 0.4;
       ctx.drawImage(silImg, 180, 60);
       ctx.globalAlpha = 1;
     } else {
-      ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
+      // ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
+      ctx.fillText("Jump", 10, 90);
     }
-    ctx.fillText(counter, 660, 90);
-    // ctx.fillText(yogevCounter, 400, 140);
-    ctx.fillText(secondsLeft, 360, 550);
-    // ctx.fillText(yogevPosition, 90, 140);
+    ctx.fillText(`P1: ${myScore}`, 10, 180);
+    ctx.fillText(`P2:${opponentScore}`, 10, 270);
+    ctx.fillText(`0:${secondsLeft}`, 360, 550);
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
 
@@ -115,7 +119,6 @@ function setupMl() {
         poseLabel === "READY" &&
         initialParts.every((partName) => pose[partName].confidence > 0.7)
       ) {
-        console.log("!!!!");
         poseLabel = "Q";
         countJump();
       } else if (poseLabel === "Q") {
@@ -129,7 +132,6 @@ function setupMl() {
         }
       }
     }
-    // setTimeout(classifyPose, 50);
   }
 
   function startSecondsCounter() {
@@ -140,7 +142,7 @@ function setupMl() {
         button.style.display = "block";
         clearInterval(counterInterval);
         audioJungle.stop();
-        if (counter > 15) {
+        if (myScore > 15) {
           youWin.play();
         } else {
           youLost.play();
@@ -150,19 +152,31 @@ function setupMl() {
   }
 
   function countJump() {
-    counter++;
-    sendScore(counter);
+    myScore++;
+    sendScore(myScore);
     // jump();
-    if (counter === 1) {
+    if (myScore === 1) {
       startSecondsCounter();
       audioJungle.setVolume(0.2);
       startSound.play();
       initialShoulder = pose.rightShoulder.y;
     }
-    if (counter === 10) {
+    if (myScore === 10) {
       eser.play();
     }
     counterSound.play();
+  }
+  function calcOpponentScore() {
+    const state = window.store.getState().simplewebrtc;
+    const opponentScores = Object.values(state.chats).filter(
+      (msg) => msg.direction === "incoming"
+    );
+    let lastScore = opponentScores
+      .sort((a, b) => a.time.getTime() - b.time.getTime())
+      ?.pop();
+    // console.log(lastScore);
+    if (lastScore) opponentScore = parseInt(lastScore.body);
+    setTimeout(calcOpponentScore, 1000);
   }
 
   function drawLine(y, color = "red") {
@@ -207,10 +221,14 @@ function setupMl() {
 }
 
 function sendScore(score) {
-  let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
+  const state = window.store.getState().simplewebrtc;
+  let roomAddress = Object.keys(state.rooms);
   if (roomAddress) roomAddress = roomAddress[0];
   window.store.dispatch(
-    Actions.sendChat(roomAddress, { body: score, displayName: "anon" })
+    Actions.sendChat(roomAddress, {
+      body: score,
+      displayName: "anon" + userId,
+    })
   );
 }
 
