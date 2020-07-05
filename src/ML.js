@@ -34,9 +34,6 @@ function setupMl() {
     );
     audioJungle.setVolume(0.1);
     audioJungle.play();
-    let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
-    if (roomAddress) roomAddress = roomAddress[0];
-    Actions.sendChat(roomAddress, { body: "qwe", displayName: "anon" });
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
         .getUserMedia({ video: true })
@@ -146,6 +143,7 @@ function setupMl() {
         poseLabel = newPoseLabel;
         if (poseLabel === "Q") {
           counter++;
+          sendScore(counter);
           jump();
           if (counter === 1) {
             counterInterval = setInterval(() => {
@@ -201,6 +199,14 @@ function setupMl() {
       }
     }
   }
+}
+
+function sendScore(score) {
+  let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
+  if (roomAddress) roomAddress = roomAddress[0];
+  window.store.dispatch(
+    Actions.sendChat(roomAddress, { body: score, displayName: "anon" })
+  );
 }
 
 class sound {
