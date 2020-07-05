@@ -26,7 +26,6 @@ function setupMl() {
 
   let initialParts = ["leftElbow", "rightElbow"];
   let parts = ["rightShoulder", "leftShoulder"];
-  // let yogevPosition = "READY";
   let jumpDelta = 90;
 
   let silImg = document.getElementById("silouethe");
@@ -142,7 +141,7 @@ function setupMl() {
         button.style.display = "block";
         clearInterval(counterInterval);
         audioJungle.stop();
-        if (myScore > 15) {
+        if (myScore > opponentScore) {
           youWin.play();
         } else {
           youLost.play();
