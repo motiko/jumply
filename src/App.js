@@ -3,10 +3,11 @@ import "./App.css";
 import { Provider } from "react-redux";
 import * as SWRTC from "@andyet/simplewebrtc";
 import "./ML.js";
-import "./virtual.js";
+// import "./virtual.js";
 
 const API_KEY = "32b9eb02645b11cb48d53829";
 // ====================================================================
+
 
 const ROOM_NAME = "jumply";
 // const ROOM_PASSWORD = "YOUR_ROOM_PASSWORD";

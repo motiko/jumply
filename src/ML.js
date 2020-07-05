@@ -1,8 +1,9 @@
 import ml5 from "ml5";
 import { Actions } from "@andyet/simplewebrtc";
-import { jump } from "./virtual";
+// import { jump } from "./virtual";
 
 const ROOM_NAME = "jumply";
+const userId = Math.floor(Math.random() * 100);
 
 document.addEventListener("DOMContentLoaded", setupMl);
 
@@ -11,17 +12,34 @@ function setupMl() {
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   let secondsLeft = 20;
-  ctx.lineWidth = 10;
-  ctx.strokeStyle = "green";
   ctx.font = "90px Verdana";
-  let counter = 0;
-  let judge;
+  let myScore = 0;
+  let opponentScore = 0;
   let startSound, eser, audioJungle, tenSeconds, youLost, youWin, counterSound;
 
   let button = document.getElementById("play");
   let counterInterval;
   let initialShoulder;
+  let pose, skeleton;
+  let poseLabel = "READY";
+  // let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
+
+  let initialParts = ["leftElbow", "rightElbow"];
+  let parts = ["rightShoulder", "leftShoulder"];
+  let jumpDelta = 90;
+
+  let silImg = document.getElementById("silouethe");
+
+  function reset() {
+    poseLabel = "READY";
+    myScore = 0;
+    opponentScore = 0;
+    secondsLeft = 20;
+    initialShoulder = undefined;
+  }
+
   button.addEventListener("click", () => {
+    reset();
     button.style.display = "none";
     startSound = new sound(process.env.PUBLIC_URL + "sounds/123.mpeg");
     counterSound = new sound(process.env.PUBLIC_URL + "sounds/counter.mp3");
@@ -42,19 +60,8 @@ function setupMl() {
           video.play();
         });
     }
+    calcOpponentScore();
   });
-
-  let pose, skeleton;
-  let poseLabel = "READY";
-
-  let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
-
-  let yogevParts = ["rightShoulder", "leftShoulder", "leftElbow", "rightElbow"];
-  let yogevPosition = "READY";
-  let yogevDelta = 30;
-  let yogevCounter = -1;
-
-  let silImg = document.getElementById("silouethe");
 
   function drawCameraIntoCanvas() {
     // Draw the video element into the canvas
@@ -64,25 +71,28 @@ function setupMl() {
     drawSkeleton();
     ctx.fillStyle = "pink";
     if (poseLabel === "READY") {
-      ctx.fillText("Get ready", 10, 90);
+      ctx.fillText("Get into position", 10, 90);
       ctx.globalAlpha = 0.4;
       ctx.drawImage(silImg, 180, 60);
       ctx.globalAlpha = 1;
     } else {
-      ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
+      // ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
+      ctx.fillText("Jump", 10, 90);
     }
-    ctx.fillText(counter, 660, 90);
-    // ctx.fillText(yogevCounter, 400, 140);
-    ctx.fillText(secondsLeft, 360, 550);
-    // ctx.fillText(yogevPosition, 90, 140);
+    ctx.fillText(`P1: ${myScore}`, 10, 180);
+    ctx.fillText(`P2:${opponentScore}`, 10, 270);
+    ctx.fillText(`0:${secondsLeft}`, 360, 550);
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
+
   const poseNet = ml5.poseNet(
     video,
     {
       architecture: "MobileNetV1",
       detectionType: "single",
-      minConfidence: 0.8,
+      minConfidence: 0.4,
+      multiplier: 1.0,
+      outputStride: 16,
     },
     modelReady
   );
@@ -93,98 +103,106 @@ function setupMl() {
       pose = poses[0].pose;
       skeleton = poses[0].skeleton;
     }
+    classifyPose();
   }
 
   function modelReady() {
     drawCameraIntoCanvas();
-    judge = ml5.neuralNetwork({
-      inputs: 8,
-      outputs: 2,
-      task: "classification",
-      debug: true,
-    });
-    const modelInfo = {
-      model: "models/jumping_jacks/model.json",
-      metadata: "models/jumping_jacks/model_meta.json",
-      weights: "models/jumping_jacks/model.weights.bin",
-    };
-    judge.load(modelInfo, judgeReady);
-  }
-
-  function judgeReady() {
+    // jump();
     classifyPose();
-    jump();
   }
 
   function classifyPose() {
-    if (!pose) return;
-    if (parts.every((partName) => pose[partName].confidence > 0.8)) {
-      // console.log(pose.rightShoulder);
-      if (pose.rightShoulder.x > initialShoulder + yogevDelta) {
-        yogevPosition = "W";
-        yogevCounter++;
-        console.log("yogev:W");
-      }
-      let inputs = pose.keypoints.filter((kp) => parts.includes(kp.part));
-
-      inputs = [
-        ...inputs.map((obj) => [obj.position.x, obj.position.x]),
-      ].flat();
-      judge.classify(inputs, poseClassified);
-    } else {
-      setTimeout(classifyPose, 100);
-    }
-  }
-
-  function poseClassified(error, results) {
-    if (results && results[0].confidence > 0.8) {
-      const newPoseLabel = results[0].label.toUpperCase();
-      if (newPoseLabel !== poseLabel) {
-        poseLabel = newPoseLabel;
-        if (poseLabel === "Q") {
-          counter++;
-          sendScore(counter);
-          jump();
-          if (counter === 1) {
-            counterInterval = setInterval(() => {
-              secondsLeft--;
-              if (secondsLeft === 10) tenSeconds.play();
-              if (secondsLeft === 0) {
-                button.style.display = "block";
-                clearInterval(counterInterval);
-                audioJungle.stop();
-                if (counter > 15) {
-                  youWin.play();
-                } else {
-                  youLost.play();
-                }
-              }
-            }, 1000);
-            audioJungle.setVolume(0.4);
-            startSound.play();
-            initialShoulder = pose.rightShoulder.x;
-            console.log("initialShoulder");
-            console.log(initialShoulder);
-          }
-          if (counter === 10) {
-            eser.play();
-          }
-          counterSound.play();
+    if (pose && parts.every((partName) => pose[partName].confidence > 0.7)) {
+      if (
+        poseLabel === "READY" &&
+        initialParts.every((partName) => pose[partName].confidence > 0.7)
+      ) {
+        poseLabel = "Q";
+        countJump();
+      } else if (poseLabel === "Q") {
+        if (pose.rightShoulder.y < initialShoulder - jumpDelta) {
+          poseLabel = "W";
+          countJump();
+        }
+      } else if (poseLabel === "W") {
+        if (pose.rightShoulder.y > initialShoulder - 50) {
+          poseLabel = "Q";
         }
       }
     }
-    classifyPose();
   }
+
+  function startSecondsCounter() {
+    counterInterval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft === 10) tenSeconds.play();
+      if (secondsLeft === 0) {
+        button.style.display = "block";
+        clearInterval(counterInterval);
+        audioJungle.stop();
+        if (myScore > opponentScore) {
+          youWin.play();
+        } else {
+          youLost.play();
+        }
+      }
+    }, 1000);
+  }
+
+  function countJump() {
+    myScore++;
+    sendScore(myScore);
+    // jump();
+    if (myScore === 1) {
+      startSecondsCounter();
+      audioJungle.setVolume(0.2);
+      startSound.play();
+      initialShoulder = pose.rightShoulder.y;
+    }
+    if (myScore === 10) {
+      eser.play();
+    }
+    counterSound.play();
+  }
+  function calcOpponentScore() {
+    const state = window.store.getState().simplewebrtc;
+    const opponentScores = Object.values(state.chats).filter(
+      (msg) => msg.direction === "incoming"
+    );
+    let lastScore = opponentScores
+      .sort((a, b) => a.time.getTime() - b.time.getTime())
+      ?.pop();
+    // console.log(lastScore);
+    if (lastScore) opponentScore = parseInt(lastScore.body);
+    setTimeout(calcOpponentScore, 1000);
+  }
+
+  function drawLine(y, color = "red") {
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(200, y);
+    ctx.stroke();
+  }
+
   function drawSkeleton() {
     if (!skeleton) return;
     for (let j = 0; j < skeleton.length; j += 1) {
       let partA = skeleton[j][0];
       let partB = skeleton[j][1];
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = "green";
 
       ctx.beginPath();
       ctx.moveTo(partA.position.x, partA.position.y);
       ctx.lineTo(partB.position.x, partB.position.y);
       ctx.stroke();
+    }
+    if (initialShoulder) {
+      drawLine(initialShoulder, "pink");
+      drawLine(initialShoulder - jumpDelta, "orange");
     }
   }
   function drawKeypoints() {
@@ -202,15 +220,19 @@ function setupMl() {
 }
 
 function sendScore(score) {
-  let roomAddress = Object.keys(window.store.getState().simplewebrtc.rooms);
+  const state = window.store.getState().simplewebrtc;
+  let roomAddress = Object.keys(state.rooms);
   if (roomAddress) roomAddress = roomAddress[0];
   window.store.dispatch(
-    Actions.sendChat(roomAddress, { body: score, displayName: "anon" })
+    Actions.sendChat(roomAddress, {
+      body: score,
+      displayName: "anon" + userId,
+    })
   );
 }
 
 class sound {
-  constructor(src, volume = 0.6) {
+  constructor(src, volume = 0.4) {
     try {
       this.sound = document.createElement("audio");
       this.sound.src = src;
