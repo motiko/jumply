@@ -4,10 +4,12 @@
   "private": true,
   "dependencies": {
     "@andyet/simplewebrtc": "^1.22.1",
+    "@tensorflow-models/posenet": "^2.2.1",
+    "@tensorflow/tfjs": "^2.0.1",
+    "@tensorflow/tfjs-backend-webgl": "^2.0.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
-    "ml5": "^0.5.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.0",

@@ -1,14 +1,17 @@
-import ml5 from "ml5";
 import { Actions } from "@andyet/simplewebrtc";
+import * as posenet from "@tensorflow-models/posenet";
+import "@tensorflow/tfjs-backend-webgl";
 // import { jump } from "./virtual";
 
 const ROOM_NAME = "jumply";
 const userId = Math.floor(Math.random() * 100);
+const videoWidth = 800;
+const videoHeight = 600;
 
 document.addEventListener("DOMContentLoaded", init);
 
-function init() {
-  var video = document.getElementById("videocap");
+async function init() {
+  var video;
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   let secondsLeft = 20;
@@ -30,6 +33,13 @@ function init() {
 
   let silImg = document.getElementById("silouethe");
 
+  try {
+    video = await loadVideo();
+  } catch (e) {
+    console.error("couldn't capture video");
+    console.error(e);
+  }
+
   function reset() {
     poseLabel = "READY";
     myScore = 0;
@@ -50,30 +60,17 @@ function init() {
     audioJungle = new Audio(
       process.env.PUBLIC_URL + "sounds/sport_countdown.mp3"
     );
-    audioJungle.volume = 0.7;
+    audioJungle.volume = 0.6;
   }
 
-  button.addEventListener("click", () => {
-    reset();
-    button.style.display = "none";
-    loadMusicFiles();
-    audioJungle.play();
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then(function (stream) {
-          video.srcObject = stream;
-          video.play();
-        });
-    }
-    calcOpponentScore();
-  });
+  async function drawCameraIntoCanvas() {
+    pose = await poseNet.estimatePoses(video, {
+      flipHorizontal: true,
+      decodingMethod: "single-person",
+    });
 
-  function drawCameraIntoCanvas() {
-    // Draw the video element into the canvas
-    ctx.drawImage(video, 0, 0, 800, 600);
-    // We can call both functions to draw all keypoints and the skeletons
-    // drawKeypoints();
+    classifyPose();
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
     drawSkeleton();
     ctx.fillStyle = "pink";
     if (poseLabel === "READY") {
@@ -82,7 +79,7 @@ function init() {
       ctx.drawImage(silImg, 180, 60);
       ctx.globalAlpha = 1;
     } else {
-      // ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 90);
+      ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 390);
       ctx.fillText("Jump", 10, 90);
     }
     ctx.fillText(`P1: ${myScore}`, 10, 180);
@@ -91,48 +88,51 @@ function init() {
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
 
-  const poseNet = ml5.poseNet(
-    video,
-    {
-      architecture: "MobileNetV1",
-      detectionType: "single",
-      minConfidence: 0.4,
-      multiplier: 1.0,
-      outputStride: 16,
-    },
-    modelReady
-  );
-  poseNet.on("pose", gotPoses);
+  const poseNet = await posenet.load({
+    architecture: "MobileNetV1",
+    outputStride: 16,
+    inputResolution: 200,
+    multiplier: 0.5,
+    quantBytes: 2,
+  });
 
-  function gotPoses(poses) {
-    if (poses.length > 0) {
-      pose = poses[0].pose;
-      skeleton = poses[0].skeleton;
-    }
-    classifyPose();
-  }
-
-  function modelReady() {
+  button.addEventListener("click", () => {
+    reset();
+    button.style.display = "none";
+    loadMusicFiles();
+    audioJungle.play();
+    calcOpponentScore();
     drawCameraIntoCanvas();
-    // jump();
-    classifyPose();
+  });
+
+  // jump();
+  //
+  function getPart(pose, partName) {
+    return pose.keypoints.find((kp) => kp.part === partName);
   }
 
   function classifyPose() {
-    if (pose && parts.every((partName) => pose[partName].confidence > 0.7)) {
+    pose = pose[0];
+    if (
+      pose &&
+      parts.every((partName) => getPart(pose, partName).score > 0.7)
+    ) {
       if (
         poseLabel === "READY" &&
-        initialParts.every((partName) => pose[partName].confidence > 0.7)
+        initialParts.every((partName) => getPart(pose, partName).score > 0.7)
       ) {
         poseLabel = "Q";
         countJump();
       } else if (poseLabel === "Q") {
-        if (pose.rightShoulder.y < initialShoulder - jumpDelta) {
+        if (
+          getPart(pose, "rightShoulder").position.y <
+          initialShoulder - jumpDelta
+        ) {
           poseLabel = "W";
           countJump();
         }
       } else if (poseLabel === "W") {
-        if (pose.rightShoulder.y > initialShoulder - 50) {
+        if (getPart(pose, "rightShoulder").position.y > initialShoulder - 50) {
           poseLabel = "Q";
         }
       }
@@ -146,7 +146,7 @@ function init() {
       if (secondsLeft === 0) {
         button.style.display = "block";
         clearInterval(counterInterval);
-        audioJungle.stop();
+        audioJungle.pause();
         if (myScore > opponentScore) {
           youWin.play();
         } else {
@@ -165,13 +165,14 @@ function init() {
       audioJungle.volume = 0.4;
       startSound.src = process.env.PUBLIC_URL + "sounds/123.mpeg";
       startSound.play();
-      initialShoulder = pose.rightShoulder.y;
+      initialShoulder = getPart(pose, "rightShoulder").position.y;
     }
     if (myScore === 10) {
       eser.play();
     }
     counterSound.play();
   }
+
   function calcOpponentScore() {
     const state = window.store.getState().simplewebrtc;
     const opponentScores = Object.values(state.chats).filter(
@@ -195,6 +196,10 @@ function init() {
   }
 
   function drawSkeleton() {
+    if (initialShoulder) {
+      drawLine(initialShoulder, "pink");
+      drawLine(initialShoulder - jumpDelta, "orange");
+    }
     if (!skeleton) return;
     for (let j = 0; j < skeleton.length; j += 1) {
       let partA = skeleton[j][0];
@@ -206,10 +211,6 @@ function init() {
       ctx.moveTo(partA.position.x, partA.position.y);
       ctx.lineTo(partB.position.x, partB.position.y);
       ctx.stroke();
-    }
-    if (initialShoulder) {
-      drawLine(initialShoulder, "pink");
-      drawLine(initialShoulder - jumpDelta, "orange");
     }
   }
 }
@@ -224,4 +225,44 @@ function sendScore(score) {
       displayName: "anon" + userId,
     })
   );
+}
+
+async function loadVideo() {
+  const video = await setupCamera(videoWidth, videoHeight);
+  video.play();
+
+  return video;
+}
+
+export async function setupCamera(width, height) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error(
+      "Browser API navigator.mediaDevices.getUserMedia not available"
+    );
+  }
+
+  const video = document.getElementById("video");
+  video.width = width;
+  video.height = height;
+
+  const mobile = isMobile();
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: {
+      facingMode: "user",
+      width: mobile ? undefined : width,
+      height: mobile ? undefined : height,
+    },
+  });
+  video.srcObject = stream;
+
+  return new Promise((resolve) => {
+    video.onloadedmetadata = () => {
+      resolve(video);
+    };
+  });
+}
+
+export function isMobile() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
