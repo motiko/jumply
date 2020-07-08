@@ -5,9 +5,9 @@ import { Actions } from "@andyet/simplewebrtc";
 const ROOM_NAME = "jumply";
 const userId = Math.floor(Math.random() * 100);
 
-document.addEventListener("DOMContentLoaded", setupMl);
+document.addEventListener("DOMContentLoaded", init);
 
-function setupMl() {
+function init() {
   var video = document.getElementById("videocap");
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
@@ -38,19 +38,23 @@ function setupMl() {
     initialShoulder = undefined;
   }
 
+  function loadMusicFiles() {
+    startSound = new Audio(process.env.PUBLIC_URL + "sounds/123.mpeg");
+    counterSound = new Audio(process.env.PUBLIC_URL + "sounds/counter.mp3");
+    tenSeconds = new Audio(process.env.PUBLIC_URL + "sounds/10sec.mp3");
+    youLost = new Audio(process.env.PUBLIC_URL + "sounds/you_lost.mp3");
+    youWin = new Audio(process.env.PUBLIC_URL + "sounds/clap.mp3");
+    eser = new Audio(process.env.PUBLIC_URL + "sounds/eser.ogg");
+    audioJungle = new Audio(
+      process.env.PUBLIC_URL + "sounds/sport_countdown.mp3"
+    );
+    audioJungle.volume = 0.7;
+  }
+
   button.addEventListener("click", () => {
     reset();
     button.style.display = "none";
-    startSound = new sound(process.env.PUBLIC_URL + "sounds/123.mpeg");
-    counterSound = new sound(process.env.PUBLIC_URL + "sounds/counter.mp3");
-    tenSeconds = new sound(process.env.PUBLIC_URL + "sounds/10sec.mp3");
-    youLost = new sound(process.env.PUBLIC_URL + "sounds/you_lost.mp3");
-    youWin = new sound(process.env.PUBLIC_URL + "sounds/clap.mp3");
-    eser = new sound(process.env.PUBLIC_URL + "sounds/eser.ogg");
-    audioJungle = new sound(
-      process.env.PUBLIC_URL + "sounds/sport_countdown.mp3"
-    );
-    audioJungle.setVolume(0.1);
+    loadMusicFiles();
     audioJungle.play();
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
@@ -156,7 +160,7 @@ function setupMl() {
     // jump();
     if (myScore === 1) {
       startSecondsCounter();
-      audioJungle.setVolume(0.2);
+      audioJungle.volume = 0.4;
       startSound.play();
       initialShoulder = pose.rightShoulder.y;
     }
@@ -229,27 +233,4 @@ function sendScore(score) {
       displayName: "anon" + userId,
     })
   );
-}
-
-class sound {
-  constructor(src, volume = 0.4) {
-    try {
-      this.sound = document.createElement("audio");
-      this.sound.src = src;
-      this.sound.volume = volume;
-      this.sound.setAttribute("preload", "auto");
-      this.sound.setAttribute("controls", "none");
-      this.sound.style.display = "none";
-      document.body.appendChild(this.sound);
-      this.play = function () {
-        this.sound.play();
-      };
-      this.stop = function () {
-        this.sound.pause();
-      };
-      this.setVolume = function (vol) {
-        this.sound.volume = vol;
-      };
-    } catch (e) {}
-  }
 }
