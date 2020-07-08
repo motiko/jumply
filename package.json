@@ -15,20 +15,16 @@
     "three": "^0.118.3"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-runtime": "~6.23.0",
-    "babel-polyfill": "~6.26.0",
-    "babel-preset-env": "~1.6.1",
-    "babel-preset-es2017": "^6.24.1",
-    "clang-format": "~1.2.2",
+    "@babel/core": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
     "cross-env": "^5.2.0",
     "eslint": "^4.19.1",
-    "eslint-config-google": "^0.9.1",
     "parcel-bundler": "~1.12.4"
   },
   "scripts": {
-    "start": "cross-env NODE_ENV=development parcel index.html --port 3000",
-    "build": "rm -rf docs && cross-env NODE_ENV=production parcel build index.html --public-url ./",
+    "start": "cross-env NODE_ENV=development parcel index.html --port 3000 --out-dir build/",
+    "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./ --out-dir build/",
     "lint": "eslint ."
   },
   "browserslist": {
