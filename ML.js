@@ -52,14 +52,12 @@ async function init() {
     startSound = new Audio();
     startSound.play();
     startSound.pause();
-    counterSound = new Audio(process.env.PUBLIC_URL + "sounds/counter.mp3");
-    tenSeconds = new Audio(process.env.PUBLIC_URL + "sounds/10sec.mp3");
-    youLost = new Audio(process.env.PUBLIC_URL + "sounds/you_lost.mp3");
-    youWin = new Audio(process.env.PUBLIC_URL + "sounds/clap.mp3");
-    eser = new Audio(process.env.PUBLIC_URL + "sounds/eser.ogg");
-    audioJungle = new Audio(
-      process.env.PUBLIC_URL + "sounds/sport_countdown.mp3"
-    );
+    counterSound = new Audio(require("/sounds/counter.mp3"));
+    tenSeconds = new Audio(require("/sounds/10sec.mp3"));
+    youLost = new Audio(require("/sounds/you_lost.mp3"));
+    youWin = new Audio(require("/sounds/clap.mp3"));
+    eser = new Audio(require("/sounds/eser.ogg"));
+    audioJungle = new Audio(require("/sounds/sport_countdown.mp3"));
     audioJungle.volume = 0.6;
   }
 

@@ -4,27 +4,31 @@
   "private": true,
   "dependencies": {
     "@andyet/simplewebrtc": "^1.22.1",
+    "@babel/runtime": "^7.10.4",
     "@tensorflow-models/posenet": "^2.2.1",
     "@tensorflow/tfjs": "^2.0.1",
     "@tensorflow/tfjs-backend-webgl": "^2.0.1",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.0",
-    "react-scripts": "3.4.1",
     "redux": "^4.0.5",
+    "sounds": "^1.0.2",
     "three": "^0.118.3"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+  "devDependencies": {
+    "@babel/core": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "cross-env": "^5.2.0",
+    "eslint": "^4.19.1",
+    "parcel-bundler": "~1.12.4"
   },
-  "eslintConfig": {
-    "extends": "react-app"
+  "scripts": {
+    "start": "cross-env NODE_ENV=development parcel index.html --port 3000 --out-dir build/",
+    "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./ --out-dir build/",
+    "lint": "eslint ."
   },
   "browserslist": {
     "production": [
