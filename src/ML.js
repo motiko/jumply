@@ -39,7 +39,9 @@ function init() {
   }
 
   function loadMusicFiles() {
-    startSound = new Audio(process.env.PUBLIC_URL + "sounds/123.mpeg");
+    startSound = new Audio();
+    startSound.play();
+    startSound.pause();
     counterSound = new Audio(process.env.PUBLIC_URL + "sounds/counter.mp3");
     tenSeconds = new Audio(process.env.PUBLIC_URL + "sounds/10sec.mp3");
     youLost = new Audio(process.env.PUBLIC_URL + "sounds/you_lost.mp3");
@@ -161,6 +163,7 @@ function init() {
     if (myScore === 1) {
       startSecondsCounter();
       audioJungle.volume = 0.4;
+      startSound.src = process.env.PUBLIC_URL + "sounds/123.mpeg";
       startSound.play();
       initialShoulder = pose.rightShoulder.y;
     }
@@ -207,18 +210,6 @@ function init() {
     if (initialShoulder) {
       drawLine(initialShoulder, "pink");
       drawLine(initialShoulder - jumpDelta, "orange");
-    }
-  }
-  function drawKeypoints() {
-    if (!pose) return;
-    for (let j = 0; j < pose.keypoints.length; j += 1) {
-      let keypoint = pose.keypoints[j];
-      // Only draw an ellipse is the pose probability is bigger than 0.2
-      if (keypoint.score > 0.5) {
-        ctx.beginPath();
-        ctx.arc(keypoint.position.x, keypoint.position.y, 10, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
     }
   }
 }
