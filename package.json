@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@andyet/simplewebrtc": "^1.22.1",
+    "@babel/runtime": "^7.10.4",
     "@tensorflow-models/posenet": "^2.2.1",
     "@tensorflow/tfjs": "^2.0.1",
     "@tensorflow/tfjs-backend-webgl": "^2.0.1",
@@ -16,8 +17,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "cross-env": "^5.2.0",
     "eslint": "^4.19.1",
     "parcel-bundler": "~1.12.4"
