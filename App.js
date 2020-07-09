@@ -19,20 +19,14 @@ const userId = Math.floor(Math.random() * 100);
 const roomName = `jumply${path ? path : userId}`;
 if (!path) location.replace(userId);
 
-
 function App() {
   return (
     <Provider store={store}>
       <SWRTC.Provider configUrl={CONFIG_URL}>
         <SWRTC.Connected>
-          {/* Request the user's media */}
           <SWRTC.RequestUserMedia video auto />
-
-          {/* Connect to a room with a name and optional password */}
           <SWRTC.Room name={roomName}>
             {({ joined, localMedia, remoteMedia }) => {
-              /* Use the rest of the SWRTC React Components to render your UI */
-              // console.log(props);
               const remoteVideo = remoteMedia.find(
                 (media) => media.kind === "video"
               );

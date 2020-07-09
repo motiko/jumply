@@ -3,7 +3,6 @@ import * as posenet from "@tensorflow-models/posenet";
 import "@tensorflow/tfjs-backend-webgl";
 // import { jump } from "./virtual";
 
-const ROOM_NAME = "jumply";
 const userId = Math.floor(Math.random() * 100);
 const videoWidth = 800;
 const videoHeight = 600;
@@ -23,7 +22,7 @@ async function init() {
   let button = document.getElementById("play");
   let counterInterval;
   let initialShoulder;
-  let pose, skeleton;
+  let pose;
   let poseLabel = "READY";
   // let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
 
@@ -32,6 +31,8 @@ async function init() {
   let jumpDelta = 90;
 
   let silImg = document.getElementById("silouethe");
+
+  let gameState = "waiting"; // waiting | playing | stoped
 
   try {
     video = await loadVideo();
@@ -95,6 +96,7 @@ async function init() {
   });
 
   button.addEventListener("click", () => {
+    console.log(getOpponentReady());
     reset();
     button.style.display = "none";
     loadMusicFiles();
@@ -120,6 +122,7 @@ async function init() {
         initialParts.every((partName) => getPart(pose, partName).score > 0.7)
       ) {
         poseLabel = "Q";
+        sendReady();
         countJump();
       } else if (poseLabel === "Q") {
         if (
@@ -155,6 +158,7 @@ async function init() {
   }
 
   function countJump() {
+    console.log(getOpponentReady());
     myScore++;
     sendScore(myScore);
     // jump();
@@ -198,25 +202,27 @@ async function init() {
       drawLine(initialShoulder, "pink");
       drawLine(initialShoulder - jumpDelta, "orange");
     }
-    if (!skeleton) return;
-    for (let j = 0; j < skeleton.length; j += 1) {
-      let partA = skeleton[j][0];
-      let partB = skeleton[j][1];
-      ctx.lineWidth = 10;
-      ctx.strokeStyle = "green";
-
-      ctx.beginPath();
-      ctx.moveTo(partA.position.x, partA.position.y);
-      ctx.lineTo(partB.position.x, partB.position.y);
-      ctx.stroke();
-    }
   }
 }
 
-function sendScore(score) {
+function getRoomAddress() {
   const state = window.store.getState().simplewebrtc;
-  let roomAddress = Object.keys(state.rooms);
-  if (roomAddress) roomAddress = roomAddress[0];
+  const roomAddress = Object.keys(state.rooms);
+  if (roomAddress) return roomAddress[0];
+}
+
+function sendReady() {
+  window.store.dispatch(Actions.setDisplayName("ready"));
+}
+
+function getOpponentReady() {
+  const state = window.store.getState().simplewebrtc;
+  const peer = Object.values(state.peers)[0];
+  return peer && peer.displayName === "ready";
+}
+
+function sendScore(score) {
+  const roomAddress = getRoomAddress();
   window.store.dispatch(
     Actions.sendChat(roomAddress, {
       body: score,
