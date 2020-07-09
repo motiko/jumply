@@ -8,24 +8,28 @@ import "./ML.js";
 const API_KEY = "32b9eb02645b11cb48d53829";
 // ====================================================================
 
-
-const ROOM_NAME = "jumply";
 // const ROOM_PASSWORD = "YOUR_ROOM_PASSWORD";
 const CONFIG_URL = `https://api.simplewebrtc.com/config/guest/${API_KEY}`;
 
 const store = SWRTC.createStore();
 window.store = store;
+
+let path = location.pathname.substr(1);
+const userId = Math.floor(Math.random() * 100);
+const roomName = `jumply${path ? path : userId}`;
+if (!path) location.replace(userId);
+
+
 function App() {
   return (
     <Provider store={store}>
       <SWRTC.Provider configUrl={CONFIG_URL}>
-
         <SWRTC.Connected>
           {/* Request the user's media */}
           <SWRTC.RequestUserMedia video auto />
 
           {/* Connect to a room with a name and optional password */}
-          <SWRTC.Room name={ROOM_NAME}>
+          <SWRTC.Room name={roomName}>
             {({ joined, localMedia, remoteMedia }) => {
               /* Use the rest of the SWRTC React Components to render your UI */
               // console.log(props);
