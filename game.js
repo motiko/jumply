@@ -10,29 +10,23 @@ const videoHeight = 600;
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
-  var video;
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   let secondsLeft = 20;
-  ctx.font = "90px Verdana";
+  let button = document.getElementById("play");
+  let poseLabel = "READY";
   let myScore = 0;
   let opponentScore = 0;
   let startSound, eser, audioJungle, tenSeconds, youLost, youWin, counterSound;
-
-  let button = document.getElementById("play");
-  let counterInterval;
-  let initialShoulder;
-  let pose;
-  let poseLabel = "READY";
-  // let parts = ["leftElbow", "rightElbow", "leftKnee", "rightKnee"];
-
-  let initialParts = ["leftElbow", "rightElbow"];
-  let parts = ["rightShoulder", "leftShoulder"];
+  let counterInterval, initialShoulder, pose, video;
+  let initialParts = ["leftKnee", "rightKnee", "leftEye", "rightEye"];
+  // let initialParts = ["leftEye", "rightEye"];
+  let actionParts = ["rightShoulder", "leftShoulder"];
   let jumpDelta = 90;
-
   let silImg = document.getElementById("silouethe");
-
   let gameState = "waiting"; // waiting | playing | stoped
+
+  ctx.font = "90px Verdana";
 
   try {
     video = await loadVideo();
@@ -53,6 +47,7 @@ async function init() {
     startSound = new Audio();
     startSound.play();
     startSound.pause();
+    startSound.src = require("/sounds/123.mpeg");
     counterSound = new Audio(require("/sounds/counter.mp3"));
     tenSeconds = new Audio(require("/sounds/10sec.mp3"));
     youLost = new Audio(require("/sounds/you_lost.mp3"));
@@ -67,6 +62,7 @@ async function init() {
       flipHorizontal: true,
       decodingMethod: "single-person",
     });
+    pose = pose[0];
 
     classifyPose();
     ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
@@ -96,7 +92,6 @@ async function init() {
   });
 
   button.addEventListener("click", () => {
-    console.log(getOpponentReady());
     reset();
     button.style.display = "none";
     loadMusicFiles();
@@ -104,26 +99,24 @@ async function init() {
     calcOpponentScore();
     drawCameraIntoCanvas();
   });
+  button.innerText = "Play";
 
-  // jump();
-  //
   function getPart(pose, partName) {
     return pose.keypoints.find((kp) => kp.part === partName);
   }
 
+  function partsMinConfidence(parts, minConfidence) {
+    return parts.every(
+      (partName) => getPart(pose, partName).score > minConfidence
+    );
+  }
+
   function classifyPose() {
-    pose = pose[0];
-    if (
-      pose &&
-      parts.every((partName) => getPart(pose, partName).score > 0.7)
-    ) {
-      if (
-        poseLabel === "READY" &&
-        initialParts.every((partName) => getPart(pose, partName).score > 0.7)
-      ) {
+    if (pose && partsMinConfidence(actionParts, 0.7)) {
+      if (poseLabel === "READY" && partsMinConfidence(initialParts, 0.9)) {
         poseLabel = "Q";
-        sendReady();
-        countJump();
+        playerInPosition();
+        sendInPosition();
       } else if (poseLabel === "Q") {
         if (
           getPart(pose, "rightShoulder").position.y <
@@ -140,12 +133,21 @@ async function init() {
     }
   }
 
+  async function playerInPosition() {
+    initialShoulder = getPart(pose, "rightShoulder").position.y;
+    await whenOpponentReady();
+    audioJungle.volume = 0.4;
+    startSound.play();
+    setTimeout(startSecondsCounter, 3000);
+  }
+
   function startSecondsCounter() {
     counterInterval = setInterval(() => {
       secondsLeft--;
       if (secondsLeft === 10) tenSeconds.play();
       if (secondsLeft === 0) {
         button.style.display = "block";
+        button.innerText = "Rematch";
         clearInterval(counterInterval);
         audioJungle.pause();
         if (myScore > opponentScore) {
@@ -158,16 +160,11 @@ async function init() {
   }
 
   function countJump() {
-    console.log(getOpponentReady());
+    // console.log(getOpponentReady());
     myScore++;
     sendScore(myScore);
     // jump();
     if (myScore === 1) {
-      startSecondsCounter();
-      audioJungle.volume = 0.4;
-      startSound.src = process.env.PUBLIC_URL + "sounds/123.mpeg";
-      startSound.play();
-      initialShoulder = getPart(pose, "rightShoulder").position.y;
     }
     if (myScore === 10) {
       eser.play();
@@ -202,6 +199,11 @@ async function init() {
       drawLine(initialShoulder, "pink");
       drawLine(initialShoulder - jumpDelta, "orange");
     }
+    if (pose) {
+      const rightShoulder = getPart(pose, "rightShoulder");
+      // console.log(rightShoulder);
+      drawLine(rightShoulder.position.y, "green");
+    }
   }
 }
 
@@ -211,14 +213,25 @@ function getRoomAddress() {
   if (roomAddress) return roomAddress[0];
 }
 
-function sendReady() {
-  window.store.dispatch(Actions.setDisplayName("ready"));
+function sendInPosition() {
+  window.store.dispatch(Actions.setDisplayName("inPosition"));
 }
 
-function getOpponentReady() {
+function whenOpponentReady() {
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(() => {
+      if (getOpponentInPosition()) {
+        clearInterval(pollInterval);
+        resolve();
+      }
+    }, 50);
+  });
+}
+
+function getOpponentInPosition() {
   const state = window.store.getState().simplewebrtc;
   const peer = Object.values(state.peers)[0];
-  return peer && peer.displayName === "ready";
+  return peer && peer.displayName === "inPosition";
 }
 
 function sendScore(score) {
