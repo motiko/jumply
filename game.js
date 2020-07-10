@@ -24,9 +24,7 @@ async function init() {
   let actionParts = ["rightShoulder", "leftShoulder"];
   let jumpDelta = 90;
   let silImg = document.getElementById("silouethe");
-  let gameState = "waiting"; // waiting | playing | stoped
-
-  ctx.font = "90px Verdana";
+  let gameState = "out_of_position"; // out_of_position | waiting | playing | stoped
 
   try {
     video = await loadVideo();
@@ -37,6 +35,7 @@ async function init() {
 
   function reset() {
     poseLabel = "READY";
+    gameState = "out_of_position";
     myScore = 0;
     opponentScore = 0;
     secondsLeft = 20;
@@ -67,19 +66,28 @@ async function init() {
     classifyPose();
     ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
     drawSkeleton();
-    ctx.fillStyle = "pink";
-    if (poseLabel === "READY") {
+    ctx.fillStyle = "lightgreen";
+    ctx.font = "90px Arcade";
+    if (gameState === "out_of_position") {
       ctx.fillText("Get into position", 10, 90);
       ctx.globalAlpha = 0.4;
       ctx.drawImage(silImg, 180, 60);
       ctx.globalAlpha = 1;
-    } else {
-      ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 390);
+    } else if (gameState === "waiting") {
+      ctx.fillText("Waiting for opponent", 10, 90);
+    } else if (gameState === "countdown") {
+      ctx.fillText("Ready", 10, 90);
+    } else if (gameState === "playing") {
+      // ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 390);
       ctx.fillText("Jump", 10, 90);
+    } else if (gameState === "stoped") {
+      button.inn;
+    } else if (gameState === "playing") {
+    ctx.font = "90px Zelda";
+      ctx.fillText(`P1: ${myScore}`, 10, 180);
+      ctx.fillText(`P2:${opponentScore}`, 10, 270);
+      ctx.fillText(`0:${secondsLeft}`, 360, 550);
     }
-    ctx.fillText(`P1: ${myScore}`, 10, 180);
-    ctx.fillText(`P2:${opponentScore}`, 10, 270);
-    ctx.fillText(`0:${secondsLeft}`, 360, 550);
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
 
@@ -114,9 +122,10 @@ async function init() {
   function classifyPose() {
     if (pose && partsMinConfidence(actionParts, 0.7)) {
       if (poseLabel === "READY" && partsMinConfidence(initialParts, 0.9)) {
+        gameState = "waiting";
         poseLabel = "Q";
-        playerInPosition();
         sendInPosition();
+        playerInPosition();
       } else if (poseLabel === "Q") {
         if (
           getPart(pose, "rightShoulder").position.y <
@@ -138,22 +147,27 @@ async function init() {
     await whenOpponentReady();
     audioJungle.volume = 0.4;
     startSound.play();
+    gameState = "countdown";
     setTimeout(startSecondsCounter, 3000);
   }
 
   function startSecondsCounter() {
+    gameState = "playing";
     counterInterval = setInterval(() => {
       secondsLeft--;
       if (secondsLeft === 10) tenSeconds.play();
       if (secondsLeft === 0) {
+        gameState = "stoped";
         button.style.display = "block";
         button.innerText = "Rematch";
         clearInterval(counterInterval);
         audioJungle.pause();
         if (myScore > opponentScore) {
           youWin.play();
+          button.innerText += " (You win)";
         } else {
           youLost.play();
+          button.innerText += " (You Lost)";
         }
       }
     }, 1000);
