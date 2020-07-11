@@ -7,6 +7,11 @@ const userId = Math.floor(Math.random() * 100);
 const videoWidth = 800;
 const videoHeight = 600;
 
+navigator.getUserMedia =
+  navigator.getUserMedia ||
+  navigator.webkitGetUserMedia ||
+  navigator.mozGetUserMedia;
+
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
@@ -83,7 +88,7 @@ async function init() {
     } else if (gameState === "stoped") {
       button.inn;
     } else if (gameState === "playing") {
-    ctx.font = "90px Zelda";
+      ctx.font = "90px Zelda";
       ctx.fillText(`P1: ${myScore}`, 10, 180);
       ctx.fillText(`P2:${opponentScore}`, 10, 270);
       ctx.fillText(`0:${secondsLeft}`, 360, 550);
@@ -265,7 +270,7 @@ async function loadVideo() {
   return video;
 }
 
-export async function setupCamera(width, height) {
+async function setupCamera(width, height) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
       "Browser API navigator.mediaDevices.getUserMedia not available"
@@ -277,6 +282,7 @@ export async function setupCamera(width, height) {
   video.height = height;
 
   const mobile = isMobile();
+  console.log("isMobile:" + mobile);
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: {
