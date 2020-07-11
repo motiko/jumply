@@ -18,3 +18,35 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+video {
+  width: 20vw;
+  position: fixed;
+  top: 0;
+}
+
+#play {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100vw;
+  height: 100vh;
+  font-size: 80px;
+  z-index: 99999;
+}
+
+#container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: gray;
+}
+
+#virtual {
+  position: fixed;
+  right: 0px;
+  bottom: 0px;
+  width: 25vw;
+  height: 50vh;
+}

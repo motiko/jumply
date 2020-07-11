@@ -1,5 +1,4 @@
 import React from "react";
-import "./App.css";
 import { Provider } from "react-redux";
 import * as SWRTC from "@andyet/simplewebrtc";
 // import "./virtual.js";
@@ -7,7 +6,6 @@ import * as SWRTC from "@andyet/simplewebrtc";
 const API_KEY = "32b9eb02645b11cb48d53829";
 // ====================================================================
 
-// const ROOM_PASSWORD = "YOUR_ROOM_PASSWORD";
 const CONFIG_URL = `https://api.simplewebrtc.com/config/guest/${API_KEY}`;
 
 const store = SWRTC.createStore();
