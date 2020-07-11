@@ -1,11 +1,18 @@
 import * as posenet from "@tensorflow-models/posenet";
 import "@tensorflow/tfjs-backend-webgl";
-import { sendInPosition, whenOpponentReady, sendScore } from "./communication";
+import {
+  sendInPosition,
+  whenOpponentReady,
+  sendScore,
+  calcOpponentScore,
+} from "./communication";
+import { loadVideo } from "./video";
 // import { jump } from "./virtual";
 
 const videoWidth = 800;
 const videoHeight = 600;
 const singlePlayer = location.pathname.substr(1) === "single";
+const button = document.getElementById("play");
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -13,7 +20,6 @@ async function init() {
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   let secondsLeft = 20;
-  let button = document.getElementById("play");
   let poseLabel = "READY";
   let myScore = 0;
   let opponentScore = 0;
@@ -27,7 +33,7 @@ async function init() {
   let gameState = "out_of_position"; // out_of_position | waiting | playing | stoped
 
   try {
-    video = await loadVideo();
+    video = await loadVideo(videoWidth, videoHeight);
   } catch (e) {
     console.error("couldn't capture video");
     console.error(e);
@@ -53,7 +59,7 @@ async function init() {
     youWin = new Audio(require("/sounds/clap.mp3"));
     eser = new Audio(require("/sounds/eser.ogg"));
     audioJungle = new Audio(require("/sounds/sport_countdown.mp3"));
-    audioJungle.volume = 0.6;
+    audioJungle.volume = 0.4;
   }
 
   async function drawCameraIntoCanvas() {
@@ -80,7 +86,6 @@ async function init() {
     } else if (gameState === "playing") {
       // ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 390);
       ctx.fillText("Jump", 10, 90);
-      // ctx.font = "90px Zelda";
       if (singlePlayer) {
         ctx.fillText(`${myScore}`, 10, 180);
       } else {
@@ -105,7 +110,7 @@ async function init() {
     button.style.display = "none";
     loadMusicFiles();
     audioJungle.play();
-    calcOpponentScore();
+    if (!singlePlayer) calcOpponentScore();
     drawCameraIntoCanvas();
   });
   button.innerText = "Play";
@@ -146,7 +151,7 @@ async function init() {
   async function playerInPosition() {
     initialShoulder = getPart(pose, "rightShoulder").position.y;
     if (!singlePlayer) await whenOpponentReady();
-    audioJungle.volume = 0.4;
+    audioJungle.volume = 0.2;
     startSound.play();
     gameState = "countdown";
     setTimeout(startSecondsCounter, 3000);
@@ -184,19 +189,6 @@ async function init() {
     counterSound.play();
   }
 
-  function calcOpponentScore() {
-    const state = window.store.getState().simplewebrtc;
-    const opponentScores = Object.values(state.chats).filter(
-      (msg) => msg.direction === "incoming"
-    );
-    let lastScore = opponentScores
-      .sort((a, b) => a.time.getTime() - b.time.getTime())
-      ?.pop();
-    // console.log(lastScore);
-    if (lastScore) opponentScore = parseInt(lastScore.body);
-    setTimeout(calcOpponentScore, 1000);
-  }
-
   function drawLine(y, color = "red") {
     ctx.lineWidth = 10;
     ctx.strokeStyle = color;
@@ -217,45 +209,4 @@ async function init() {
       drawLine(rightShoulder.position.y, "green");
     }
   }
-}
-
-async function loadVideo() {
-  const video = await setupCamera(videoWidth, videoHeight);
-  video.play();
-
-  return video;
-}
-
-async function setupCamera(width, height) {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    throw new Error(
-      "Browser API navigator.mediaDevices.getUserMedia not available"
-    );
-  }
-
-  const video = document.getElementById("video");
-  video.width = width;
-  video.height = height;
-
-  const mobile = isMobile();
-  console.log("isMobile:" + mobile);
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: {
-      facingMode: "user",
-      width: mobile ? undefined : width,
-      height: mobile ? undefined : height,
-    },
-  });
-  video.srcObject = stream;
-
-  return new Promise((resolve) => {
-    video.onloadedmetadata = () => {
-      resolve(video);
-    };
-  });
-}
-
-export function isMobile() {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }

@@ -1,3 +1,4 @@
+import { Actions } from "@andyet/simplewebrtc";
 
 export function getRoomAddress() {
   const state = window.store.getState().simplewebrtc;
@@ -34,4 +35,17 @@ export function sendScore(score) {
       displayName: "anon" + userId,
     })
   );
+}
+
+function calcOpponentScore() {
+  const state = window.store.getState().simplewebrtc;
+  const opponentScores = Object.values(state.chats).filter(
+    (msg) => msg.direction === "incoming"
+  );
+  let lastScore = opponentScores
+    .sort((a, b) => a.time.getTime() - b.time.getTime())
+    ?.pop();
+  // console.log(lastScore);
+  if (lastScore) opponentScore = parseInt(lastScore.body);
+  setTimeout(calcOpponentScore, 1000);
 }
