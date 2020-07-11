@@ -7,11 +7,6 @@ const userId = Math.floor(Math.random() * 100);
 const videoWidth = 800;
 const videoHeight = 600;
 
-navigator.getUserMedia =
-  navigator.getUserMedia ||
-  navigator.webkitGetUserMedia ||
-  navigator.mozGetUserMedia;
-
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
@@ -162,10 +157,10 @@ async function init() {
       secondsLeft--;
       if (secondsLeft === 10) tenSeconds.play();
       if (secondsLeft === 0) {
+        clearInterval(counterInterval);
         gameState = "stoped";
         button.style.display = "block";
         button.innerText = "Rematch";
-        clearInterval(counterInterval);
         audioJungle.pause();
         if (myScore > opponentScore) {
           youWin.play();
@@ -179,12 +174,9 @@ async function init() {
   }
 
   function countJump() {
-    // console.log(getOpponentReady());
     myScore++;
     sendScore(myScore);
     // jump();
-    if (myScore === 1) {
-    }
     if (myScore === 10) {
       eser.play();
     }
