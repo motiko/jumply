@@ -28,21 +28,12 @@ export function getOpponentInPosition() {
 }
 
 export function sendScore(score) {
-  const roomAddress = getRoomAddress();
-  window.store.dispatch(
-    Actions.sendChat(roomAddress, {
-      body: score,
-    })
-  );
+  console.log("sending: " + score);
+  window.store.dispatch(Actions.setDisplayName(score));
 }
 
 export function getOpponentScore() {
   const state = window.store.getState().simplewebrtc;
-  const opponentScores = Object.values(state.chats).filter(
-    (msg) => msg.direction === "incoming"
-  );
-  let lastScore = opponentScores
-    .sort((a, b) => a.time.getTime() - b.time.getTime())
-    ?.pop();
-  return lastScore?.body || 0;
+  const peer = Object.values(state.peers)[0];
+  return parseInt(peer?.displayName) || 0;
 }

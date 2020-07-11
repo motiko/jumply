@@ -46,6 +46,7 @@ async function init() {
     opponentScore = 0;
     secondsLeft = 20;
     initialShoulder = undefined;
+    if (!singlePlayer) sendScore(myScore);
   }
 
   function loadMusicFiles() {
@@ -177,6 +178,7 @@ async function init() {
           youLost.play();
           button.innerText += " (You Lost)";
         }
+        // reset();
       }
     }, 1000);
   }
@@ -187,6 +189,7 @@ async function init() {
   }
 
   function countJump() {
+    if (gameState !== "playing") return;
     myScore++;
     if (!singlePlayer) sendScore(myScore);
     // jump();
