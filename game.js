@@ -4,7 +4,7 @@ import {
   sendInPosition,
   whenOpponentReady,
   sendScore,
-  calcOpponentScore,
+  getOpponentScore,
 } from "./communication";
 import { loadVideo } from "./video";
 // import { jump } from "./virtual";
@@ -90,7 +90,7 @@ async function init() {
         ctx.fillText(`${myScore}`, 10, 180);
       } else {
         ctx.fillText(`P1: ${myScore}`, 10, 180);
-        ctx.fillText(`P2:${opponentScore}`, 10, 270);
+        ctx.fillText(`P2: ${opponentScore}`, 10, 270);
       }
       ctx.fillText(`0:${secondsLeft}`, 360, 550);
     }
@@ -141,6 +141,7 @@ async function init() {
           countJump();
         }
       } else if (poseLabel === "W") {
+        counterSound.pause();
         if (getPart(pose, "rightShoulder").position.y > initialShoulder - 50) {
           poseLabel = "Q";
         }
@@ -151,7 +152,7 @@ async function init() {
   async function playerInPosition() {
     initialShoulder = getPart(pose, "rightShoulder").position.y;
     if (!singlePlayer) await whenOpponentReady();
-    audioJungle.volume = 0.2;
+    audioJungle.volume = 0.1;
     startSound.play();
     gameState = "countdown";
     setTimeout(startSecondsCounter, 3000);
@@ -168,7 +169,8 @@ async function init() {
         button.style.display = "block";
         button.innerText = "Rematch";
         audioJungle.pause();
-        if (myScore > opponentScore) {
+        const targetScore = singlePlayer ? 15 : opponentScore;
+        if (myScore > targetScore) {
           youWin.play();
           button.innerText += " (You win)";
         } else {
@@ -179,6 +181,11 @@ async function init() {
     }, 1000);
   }
 
+  function calcOpponentScore() {
+    opponentScore = parseInt(getOpponentScore());
+    setTimeout(calcOpponentScore, 1000);
+  }
+
   function countJump() {
     myScore++;
     if (!singlePlayer) sendScore(myScore);
@@ -186,6 +193,7 @@ async function init() {
     if (myScore === 10) {
       eser.play();
     }
+    counterSound.currentTime = 0;
     counterSound.play();
   }
 

@@ -32,12 +32,11 @@ export function sendScore(score) {
   window.store.dispatch(
     Actions.sendChat(roomAddress, {
       body: score,
-      displayName: "anon" + userId,
     })
   );
 }
 
-function calcOpponentScore() {
+export function getOpponentScore() {
   const state = window.store.getState().simplewebrtc;
   const opponentScores = Object.values(state.chats).filter(
     (msg) => msg.direction === "incoming"
@@ -45,7 +44,5 @@ function calcOpponentScore() {
   let lastScore = opponentScores
     .sort((a, b) => a.time.getTime() - b.time.getTime())
     ?.pop();
-  // console.log(lastScore);
-  if (lastScore) opponentScore = parseInt(lastScore.body);
-  setTimeout(calcOpponentScore, 1000);
+  return lastScore?.body || 0;
 }
