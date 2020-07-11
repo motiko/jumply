@@ -1,11 +1,11 @@
-import { Actions } from "@andyet/simplewebrtc";
 import * as posenet from "@tensorflow-models/posenet";
 import "@tensorflow/tfjs-backend-webgl";
+import { sendInPosition, whenOpponentReady, sendScore } from "./communication";
 // import { jump } from "./virtual";
 
-const userId = Math.floor(Math.random() * 100);
 const videoWidth = 800;
 const videoHeight = 600;
+const singlePlayer = location.pathname.substr(1) === "single";
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -80,12 +80,13 @@ async function init() {
     } else if (gameState === "playing") {
       // ctx.fillText(poseLabel === "W" ? "UP" : "DOWN", 10, 390);
       ctx.fillText("Jump", 10, 90);
-    } else if (gameState === "stoped") {
-      button.inn;
-    } else if (gameState === "playing") {
-      ctx.font = "90px Zelda";
-      ctx.fillText(`P1: ${myScore}`, 10, 180);
-      ctx.fillText(`P2:${opponentScore}`, 10, 270);
+      // ctx.font = "90px Zelda";
+      if (singlePlayer) {
+        ctx.fillText(`${myScore}`, 10, 180);
+      } else {
+        ctx.fillText(`P1: ${myScore}`, 10, 180);
+        ctx.fillText(`P2:${opponentScore}`, 10, 270);
+      }
       ctx.fillText(`0:${secondsLeft}`, 360, 550);
     }
     window.requestAnimationFrame(drawCameraIntoCanvas);
@@ -124,7 +125,7 @@ async function init() {
       if (poseLabel === "READY" && partsMinConfidence(initialParts, 0.9)) {
         gameState = "waiting";
         poseLabel = "Q";
-        sendInPosition();
+        if (!singlePlayer) sendInPosition();
         playerInPosition();
       } else if (poseLabel === "Q") {
         if (
@@ -144,7 +145,7 @@ async function init() {
 
   async function playerInPosition() {
     initialShoulder = getPart(pose, "rightShoulder").position.y;
-    await whenOpponentReady();
+    if (!singlePlayer) await whenOpponentReady();
     audioJungle.volume = 0.4;
     startSound.play();
     gameState = "countdown";
@@ -175,7 +176,7 @@ async function init() {
 
   function countJump() {
     myScore++;
-    sendScore(myScore);
+    if (!singlePlayer) sendScore(myScore);
     // jump();
     if (myScore === 10) {
       eser.play();
@@ -216,43 +217,6 @@ async function init() {
       drawLine(rightShoulder.position.y, "green");
     }
   }
-}
-
-function getRoomAddress() {
-  const state = window.store.getState().simplewebrtc;
-  const roomAddress = Object.keys(state.rooms);
-  if (roomAddress) return roomAddress[0];
-}
-
-function sendInPosition() {
-  window.store.dispatch(Actions.setDisplayName("inPosition"));
-}
-
-function whenOpponentReady() {
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(() => {
-      if (getOpponentInPosition()) {
-        clearInterval(pollInterval);
-        resolve();
-      }
-    }, 50);
-  });
-}
-
-function getOpponentInPosition() {
-  const state = window.store.getState().simplewebrtc;
-  const peer = Object.values(state.peers)[0];
-  return peer && peer.displayName === "inPosition";
-}
-
-function sendScore(score) {
-  const roomAddress = getRoomAddress();
-  window.store.dispatch(
-    Actions.sendChat(roomAddress, {
-      body: score,
-      displayName: "anon" + userId,
-    })
-  );
 }
 
 async function loadVideo() {

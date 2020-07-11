@@ -4,7 +4,7 @@
 }
 @font-face {
   font-family: "Chargen";
-  src: url("./fonts/6809-chargen/6809 chargen.ttf");
+  src: url("./fonts/6809-chargen/chargen.ttf");
 }
 @font-face {
   font-family: "Arcade";
@@ -13,8 +13,7 @@
 
 body {
   margin: 0;
-  font-family: "Arcade", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
-    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family:  "Arcade", "Zelda", "Chargen", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

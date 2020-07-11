@@ -17,6 +17,9 @@ const roomName = `jumply${path ? path : userId}`;
 if (!path) location.replace(userId);
 
 function App() {
+  if (path === "single") {
+    return null;
+  }
   return (
     <Provider store={store}>
       <SWRTC.Provider configUrl={CONFIG_URL}>
