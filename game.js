@@ -8,6 +8,7 @@ import {
 } from "./communication";
 import { loadVideo } from "./video";
 // import { jump } from "./virtual";
+import { Howl, Howler } from "howler";
 
 const videoWidth = 800;
 const videoHeight = 600;
@@ -23,9 +24,8 @@ async function init() {
   let poseLabel = "READY";
   let myScore = 0;
   let opponentScore = 0;
-  let startSound, eser, audioJungle, tenSeconds, youLost, youWin, counterSound;
-  let counterInterval, initialShoulder, pose, video;
-  let initialParts = ["leftKnee", "rightKnee", "leftEye", "rightEye"];
+  let counterInterval, initialShoulder, pose, video, sounds;
+  let initialParts = ["leftHip", "rightHip", "leftEye", "rightEye"];
   // let initialParts = ["leftEye", "rightEye"];
   let actionParts = ["rightShoulder", "leftShoulder"];
   let jumpDelta = 90;
@@ -50,17 +50,25 @@ async function init() {
   }
 
   function loadMusicFiles() {
-    startSound = new Audio();
-    startSound.play();
-    startSound.pause();
-    startSound.src = require("/sounds/123.mpeg");
-    counterSound = new Audio(require("/sounds/counter.mp3"));
-    tenSeconds = new Audio(require("/sounds/10sec.mp3"));
-    youLost = new Audio(require("/sounds/you_lost.mp3"));
-    youWin = new Audio(require("/sounds/clap.mp3"));
-    eser = new Audio(require("/sounds/eser.ogg"));
-    audioJungle = new Audio(require("/sounds/sport_countdown.mp3"));
-    audioJungle.volume = 0.4;
+    let startSound = new Howl({ src: require("/sounds/123.mpeg") });
+    let counterSound = new Howl({ src: require("/sounds/counter.mp3") });
+    let audioJungle = new Howl({
+      src: require("/sounds/sport_countdown.mp3"),
+      sound: 0.2,
+    });
+    let tenSeconds = new Howl({ src: require("/sounds/10sec.mp3") });
+    let youLost = new Howl({ src: require("/sounds/you_lost.mp3") });
+    let youWin = new Howl({ src: require("/sounds/clap.mp3") });
+    let eser = new Howl({ src: require("/sounds/eser.ogg") });
+    return {
+      startSound,
+      counterSound,
+      tenSeconds,
+      youWin,
+      youLost,
+      eser,
+      audioJungle,
+    };
   }
 
   async function drawCameraIntoCanvas() {
@@ -109,8 +117,8 @@ async function init() {
   button.addEventListener("click", () => {
     reset();
     button.style.display = "none";
-    loadMusicFiles();
-    audioJungle.play();
+    sounds = loadMusicFiles();
+    if (sounds) sounds.audioJungle.play();
     if (!singlePlayer) calcOpponentScore();
     drawCameraIntoCanvas();
   });
@@ -142,7 +150,6 @@ async function init() {
           countJump();
         }
       } else if (poseLabel === "W") {
-        counterSound.pause();
         if (getPart(pose, "rightShoulder").position.y > initialShoulder - 50) {
           poseLabel = "Q";
         }
@@ -153,8 +160,10 @@ async function init() {
   async function playerInPosition() {
     initialShoulder = getPart(pose, "rightShoulder").position.y;
     if (!singlePlayer) await whenOpponentReady();
-    audioJungle.volume = 0.1;
-    startSound.play();
+    if (sounds) {
+      sounds.audioJungle.volume(0.1);
+      sounds.startSound.play();
+    }
     gameState = "countdown";
     setTimeout(startSecondsCounter, 3000);
   }
@@ -163,19 +172,20 @@ async function init() {
     gameState = "playing";
     counterInterval = setInterval(() => {
       secondsLeft--;
-      if (secondsLeft === 10) tenSeconds.play();
+      if (secondsLeft === 10 && sounds) sounds.tenSeconds.play();
       if (secondsLeft === 0) {
         clearInterval(counterInterval);
         gameState = "stoped";
         button.style.display = "block";
-        button.innerText = "Rematch";
-        audioJungle.pause();
+        if (singlePlayer) button.innerText = "Play again";
+        else button.innerText = "Rematch";
+        if (sounds) sounds.audioJungle.stop();
         const targetScore = singlePlayer ? 15 : opponentScore;
         if (myScore > targetScore) {
-          youWin.play();
+          if (sounds) sounds.youWin.play();
           button.innerText += " (You win)";
         } else {
-          youLost.play();
+          if (sounds) sounds.youLost.play();
           button.innerText += " (You Lost)";
         }
         // reset();
@@ -190,14 +200,13 @@ async function init() {
 
   function countJump() {
     if (gameState !== "playing") return;
+    if (sounds) sounds.counterSound.stop().play();
     myScore++;
     if (!singlePlayer) sendScore(myScore);
     // jump();
-    if (myScore === 10) {
-      eser.play();
+    if (myScore === 10 && sounds) {
+      sounds.eser.play();
     }
-    counterSound.currentTime = 0;
-    counterSound.play();
   }
 
   function drawLine(y, color = "red") {

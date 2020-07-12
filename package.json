@@ -8,6 +8,7 @@
     "@tensorflow-models/posenet": "^2.2.1",
     "@tensorflow/tfjs": "^2.0.1",
     "@tensorflow/tfjs-backend-webgl": "^2.0.1",
+    "howler": "^2.2.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.0",
