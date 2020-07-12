@@ -1,4 +1,4 @@
-import * as posenet from "@tensorflow-models/posenet";
+import { load as loadPosenet } from "@tensorflow-models/posenet";
 import "@tensorflow/tfjs-backend-webgl";
 import {
   sendInPosition,
@@ -8,7 +8,7 @@ import {
 } from "./communication";
 import { loadVideo } from "./video";
 // import { jump } from "./virtual";
-import { Howl, Howler } from "howler";
+import { Howl } from "howler";
 
 const videoWidth = 800;
 const videoHeight = 600;
@@ -106,7 +106,7 @@ async function init() {
     window.requestAnimationFrame(drawCameraIntoCanvas);
   }
 
-  const poseNet = await posenet.load({
+  const poseNet = await loadPosenet({
     architecture: "MobileNetV1",
     outputStride: 16,
     inputResolution: 200,
