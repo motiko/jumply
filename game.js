@@ -26,7 +26,6 @@ async function init() {
   let opponentScore = 0;
   let counterInterval, initialShoulder, pose, video, sounds;
   let initialParts = ["leftHip", "rightHip", "leftEye", "rightEye"];
-  // let initialParts = ["leftEye", "rightEye"];
   let actionParts = ["rightShoulder", "leftShoulder"];
   let jumpDelta = 90;
   let silImg = document.getElementById("silouethe");
@@ -134,13 +133,25 @@ async function init() {
     );
   }
 
+  function partsInBox(parts) {
+    return ["leftEye"].every(function inBox(partName) {
+      const { x, y } = getPart(pose, partName).position;
+      console.table({ x, y });
+      return x > 180 && y > 140;
+    });
+  }
+
   function classifyPose() {
     if (pose && partsMinConfidence(actionParts, 0.7)) {
-      if (poseLabel === "READY" && partsMinConfidence(initialParts, 0.9)) {
+      if (
+        poseLabel === "READY" &&
+        partsMinConfidence(initialParts, 0.8) &&
+        partsInBox(["leftEye", "rightEye"])
+      ) {
         gameState = "waiting";
         poseLabel = "Q";
         if (!singlePlayer) sendInPosition();
-        playerInPosition();
+        setPlayerInPosition();
       } else if (poseLabel === "Q") {
         if (
           getPart(pose, "rightShoulder").position.y <
@@ -157,7 +168,7 @@ async function init() {
     }
   }
 
-  async function playerInPosition() {
+  async function setPlayerInPosition() {
     initialShoulder = getPart(pose, "rightShoulder").position.y;
     if (!singlePlayer) await whenOpponentReady();
     if (sounds) {
