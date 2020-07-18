@@ -17,7 +17,6 @@ export async function setupCamera(width, height) {
   video.height = height;
 
   const mobile = isMobile();
-  console.log("isMobile:" + mobile);
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: {

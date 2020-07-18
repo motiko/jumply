@@ -134,10 +134,9 @@ async function init() {
   }
 
   function partsInBox(parts) {
-    return ["leftEye"].every(function inBox(partName) {
+    return parts.every(function inBox(partName) {
       const { x, y } = getPart(pose, partName).position;
-      console.table({ x, y });
-      return x > 180 && y > 140;
+      return x > 180 && y > 180;
     });
   }
 
@@ -236,7 +235,6 @@ async function init() {
     }
     if (pose) {
       const rightShoulder = getPart(pose, "rightShoulder");
-      // console.log(rightShoulder);
       drawLine(rightShoulder.position.y, "green");
     }
   }
